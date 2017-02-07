@@ -1,0 +1,448 @@
+microcode bank[35:16] cs.m1;
+microcode bank[15:0] cs.m2;
+
+field nextaddr[35:27];
+
+field jam[26:24]={
+	all=7,
+	jmpcandmn=6,
+	jmpcandmz=5,
+	jmpc=4,
+	jamnandz=3,
+	jamn=2,
+	jamz=1,
+	none=0
+};
+
+field sh[23:22]={
+	nsh=0,
+	shr1=1,
+	shl8=2,
+	notused=3
+};
+
+field alu[21:16]={
+	bminusa=63,
+	aplusbplus1=61,
+	aplusb=60,
+	nega=59,
+	aplus1=56,
+	bminus1=54,
+	bplus1=53,
+	negone=50,
+	one=49,
+	notb=44,
+	aorb=28,
+	nota=26,
+	a=24,
+	b=20,
+	zero=16,
+	aandb=12
+};
+
+field h[15:15];
+field opc[14];
+field tos[13];
+field cpp[12];
+field lv[11];
+field sp[10];
+field pc[9];
+field mdr[8];
+field mar[7];
+field write[6];
+field read[5];
+field fetch[4];
+field bbus[3:0]={
+	mdr=0,
+	pc=1,
+	mbr=2,
+	mbru=3,
+	sp=4,
+	lv=5,
+	cpp=6,
+	tos=7,
+	opc=8
+};
+begin microcode@0
+
+nop1: nextaddr=0x2;																//0
+f: pc=1 alu=bplus1 bbus=pc nextaddr=0x41;										//1
+main1: pc=1 alu=bplus1 bbus=pc fetch=1 jam=jmpc nextaddr=0x0;			//2 or jmpc and nextaddr in junction box
+iadd2: h=1 alu=b bbus=7 nextaddr=0x4;											//3
+iadd3: tos=1 mdr=1 alu=aplusb bbus=0 nextaddr=0x2;							//4
+isub2: h=1 alu=b bbus=7 nextaddr=0x6;											//5
+isub3: mdr=1 tos=1 bbus=mdr alu=bminusa write=1 nextaddr=0x2;			//6
+iand2: h=1 alu=b bbus=tos nextaddr=0x8;										//7
+iand3: mdr=1 tos=1 alu=aandb bbus=mdr write=1 nextaddr=0x2;				//8
+ior2: h=1 alu=b bbus=tos nextaddr=0xa;											//9
+ior3: mdr=1 tos=1 alu=aorb bbus=mdr write=1 nextaddr=0x2;				//a
+dup2: mdr=1 alu=b bbus=tos write=1 nextaddr=0x2;							//b
+pop2: nextaddr=0xd;																	//c
+pop3: tos=1 alu=b bbus=mdr nextaddr=0x2;										//d
+swap2: mar=1 bbus=sp alu=b nextaddr=0xf;										//e
+swap3: h=1 bbus=mdr alu=b write=1 nextaddr=0x11;							//f
+bipush1: sp=1 mar=1 bbus=sp alu=bplus1 nextaddr=0x16;						//10 
+swap4: mdr=1 alu=b bbus=tos nextaddr=0x12;									//11
+swap5: mar=1 bbus=sp alu=bminus1 write=1 nextaddr=0x14;					//12
+ldc_w1: pc=1 bbus=pc alu=bplus1 fetch=1 nextaddr=28;						//13
+swap6: tos=1 alu=a nextaddr=0x2;													//14
+iload1: h=1 bbus=lv alu=b nextaddr=0x18;										//15
+bipush2: pc=1 bbus=pc alu=bplus1 fetch=1 nextaddr=0x17;					//16
+bipush3: mdr=1 tos=1 alu=b bbus=mbr write=1 nextaddr=0x2;				//17
+iload2: mar=1 bbus=mbru alu=aplusb read=1 nextaddr=0x19;					//18
+iload3: mar=1 sp=1 bbus=sp alu=bplus1 nextaddr=0x1a;						//19
+iload4: pc=1 bbus=pc alu=bplus1 fetch=1 write=1 nextaddr=0x1b;			//1a
+iload5: tos=1 bbus=mdr alu=b nextaddr=0x2;									//1b
+istore2: mar=1 bbus=mbru alu=aplusb nextaddr=0x1d;							//1c
+istore3: mdr=1 bbus=tos write=1 alu=b nextaddr=0x1e;						//1d
+istore4: sp=1 mar=1 bbus=sp alu=bminus1 read=1 nextaddr=0x1f;			//1e
+istore5: pc=1 bbus=pc alu=bplus1 fetch=1 nextaddr=0x20;					//1f
+istore6: tos=1 bbus=mdr alu=b nextaddr=0x2;									//20
+wide2: jam=jmpc nextaddr=0x100;													//21
+wide_iload2: h=1 bbus=mbru alu=b sh=shl8 nextaddr=0x23;					//22
+wide_iload3: h=1 bbus=mbru alu=aorb nextaddr=0x24;							//23
+wide_iload4: mar=1 bbus=lv alu=aplusb read=1 nextaddr=0x19;				//24
+wide_istore2: h=1 bbus=mbru alu=b sh=shl8 nextaddr=0x26;					//25
+wide_istore3: h=1 bbus=mbru alu=aorb nextaddr=0x27;						//26
+wide_istore4: mar=1 bbus=lv alu=aplusb read=1 nextaddr=0x1d;			//27
+ldc_w2: h=1 bbus=mbru alu=b sh=shl8 nextaddr=0x29;							//28
+ldc_w3: h=1 bbus=mbru alu=aorb nextaddr=0x2a;								//29
+ldc_w4: mar=1 bbus=cpp alu=aplusb read=1 nextaddr=0x19;					//2a		
+iinc2: mar=1 bbus=mbru alu=aplusb read=1 nextaddr=0x2c;					//2b
+iinc3: pc=1 bbus=pc alu=bplus1 fetch=1 nextaddr=0x2d;						//2c
+iinc4: h=1 bbus=mdr alu=b nextaddr=0x2e;										//2d
+iinc5: pc=1 bbus=pc alu=bplus1 fetch=1 nextaddr=0x2f;						//2e
+iinc6: mdr=1 bbus=mbr alu=aplusb write=1 nextaddr=0x2;					//2f
+goto2: pc=1 bbus=pc alu=bplus1 fetch=1 nextaddr=0x31;						//30
+goto3: h=1 bbus=mbr alu=b sh=shl8 nextaddr=0x32;							//31
+goto4: h=1 bbus=mbru alu=aorb nextaddr=0x33;									//32
+goto5: pc=1 bbus=opc alu=aplusb fetch=1 nextaddr=0x34;					//33
+goto6: nextaddr=0x2;																	//34
+iflt2: opc=1 bbus=tos alu=b nextaddr=0x37;									//35
+istore1:h=1 bbus=lv alu=b nextaddr=0x1c;										//36
+iflt3: tos=1 bbus=mdr alu=b nextaddr=0x38;									//37
+iflt4: jam=jamn bbus=opc alu=b nextaddr=0x1;									//38 inside junction box or the 9th bit with high bit
+ifeq2: opc=1 bbus=tos alu=b nextaddr=0x3a;									//39
+ifeq3: tos=1 bbus=mdr alu=b nextaddr=0x3b;									//3a
+ifeq4: jam=jamz bbus=opc alu=b nextaddr=0x1;									//3b
+if_icmpeq2: mar=1 sp=1 bbus=sp alu=bminus1 nextaddr=0x3d;				//3c
+if_icmpeq3: h=1 bbus=mdr alu=b read=1 nextaddr=0x3e;						//3d
+if_icmpeq4: opc=1 bbus=tos alu=b nextaddr=0x3f;								//3e
+if_icmpeq5: tos=1 bbus=mdr alu=b nextaddr=0x40;								//3f
+if_icmpeq6: jam=jamz bbus=opc alu=bminusa nextaddr=0x1;					//40
+f2: pc=1 alu=bplus1 bbus=pc fetch=1 nextaddr=0x42;							//41
+f3: nextaddr=0x2;																		//42
+invokevirtual2: h=1 bbus=mbru sh=shl8 nextaddr=0x44;						//43
+invokevirtual3: h=1 bbus=mbru alu=aorb nextaddr=0x45;						//44
+invokevirtual4: mar=1 bbus=cpp alu=aplusb read=1 nextaddr=0x46;		//45
+invokevirtual5: opc=1 bbus=pc alu=bplus1 nextaddr=0x47;					//46
+invokevirtual6: pc=1 bbus=mdr alu=b fetch=1 nextaddr=0x48;				//47
+invokevirtual7: pc=1 bbus=pc alu=bplus1 fetch=1 nextaddr=0x49;			//48
+invokevirtual8: h=1 bbus=mbru sh=shl8 alu=b nextaddr=0x4a;				//49
+invokevirtual9: h=1 bbus=mbru alu=aorb nextaddr=0x4b;						//4a
+invokevirtual10: pc=1 bbus=pc alu=bplus1 fetch=1 nextaddr=0x4c;		//4b
+invokevirtual11: tos=1 bbus=sp alu=bminusa nextaddr=0x4d;				//4c
+invokevirtual12: tos=1 mar=1 bbus=tos alu=bplus1 nextaddr=0x4e;		//4d
+invokevirtual13: pc=1 bbus=pc alu=bplus1 fetch=1 nextaddr=0x4f;		//4e
+invokevirtual14: h=1 bbus=mbru sh=shl8 nextaddr=0x50;						//4f
+invokevirtual15: h=1 bbus=mbru alu=aorb nextaddr=0x51;					//50
+invokevirtual16: mdr=1 bbus=sp alu=aplusbplus1 write=1 nextaddr=0x52;//51
+invokevirtual17: mar=1 sp=1 bbus=mdr alu=b nextaddr=0x53;				//52
+invokevirtual18: mdr=1 bbus=opc alu=b write=1 nextaddr=0x54;			//53
+invokevirtual19: mar=1 sp=1 bbus=sp alu=bplus1 nextaddr=0x55;			//54
+invokevirtual20: mdr=1 bbus=lv alu=b write=1 nextaddr=0x56;				//55
+invokevirtual21: pc=1 bbus=pc alu=bplus1 fetch=1 nextaddr=0x58;		//56
+pop1: mar=1 sp=1 alu=bminus1 bbus=sp read=1 nextaddr=0xc;				//57
+invokevirtual22: lv=1 bbus=tos alu=b nextaddr=0x2;							//58
+dup1: mar=1 sp=1 alu=bplus1 bbus=sp nextaddr=0xb;							//59
+ireturn2: nextaddr=0x5b;															//5a
+ireturn3: lv=1 mar=1 bbus=mdr alu=b read=1 nextaddr=0x5c;				//5b
+ireturn4: mar=1 bbus=lv alu=bplus1 nextaddr=0x5d;							//5c
+ireturn5: pc=1 bbus=mdr alu=b read=1 fetch=1 nextaddr=0x5e;				//5d
+ireturn6: mar=1 bbus=sp alu=b nextaddr=0x61;									//5e
+swap1: mar=1 bbus=sp alu=bminus1 read=1 nextaddr=0xe;						//5f
+iadd1: sp=1 mar=1 alu=bminus1 bbus=4 read=1 nextaddr=0x3;					//60
+ireturn7: lv=1 bbus=mdr alu=b nextaddr=0x62;									//61
+ireturn8: mdr=1 bbus=tos alu=b write=1 nextaddr=0x2;						//62
+nextaddr=0x65;
+isub1: sp=1 mar=1 alu=bminus1 bbus=4 read=1 nextaddr=0x5;				//64
+nextaddr=0x65;																			//65
+nextaddr=0x65;																			//66
+nextaddr=0x65;																			//67
+nextaddr=0x65;																			//68
+nextaddr=0x65;																			//69
+nextaddr=0x65;																			//70
+nextaddr=0x65;																			//71
+nextaddr=0x65;																			//72
+nextaddr=0x65;																			//73
+nextaddr=0x65;																			//74
+nextaddr=0x65;																			//75
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+iand1: sp=1 mar=1 alu=bminus1 bbus=sp read=1 nextaddr=0x7;				//7e
+nextaddr=0x65;
+ior1:mar=1 sp=1 alu=bminus1 bbus=sp read=1 nextaddr=0x9;					//80
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+iinc1: h=1 bbus=lv alu=b nextaddr=0x2b;										//84
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+ifeq1: mar=1 sp=1 bbus=sp alu=bminus1 read=1	nextaddr=0x39;				//99
+nextaddr=0x65;
+iflt1: mar=1 sp=1 bbus=sp alu=bminus1 read=1 nextaddr=0x35;				//9b
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+if_icmpeq1: mar=1 sp=1 bbus=sp alu=bminus1 read=1 nextaddr=0x3c;		//9f
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+goto1: opc=1 bbus=pc alu=bminus1 nextaddr=0x30;								//a7
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+ireturn1: mar=1 sp=1 bbus=lv alu=b read=1 nextaddr=0x5a;					//ac
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+invokevirtual1: pc=1 bbus=pc alu=bplus1 fetch=1 nextaddr=0x43;			//b6
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+wide1: pc=1 bbus=pc alu=bplus1 fetch=1 nextaddr=0x21;						//c4 or the value in the mbr with 0x100 inside the junction box
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+nextaddr=0x65;
+ nextaddr=0x65;
+nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+ nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+t: opc=1 bbus=pc alu=bminus1 nextaddr=0x30;										//101
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+wide_iload1: pc=1 bbus=pc alu=bplus1 fetch=1 nextaddr=0x22;					//115 
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+nextaddr=0x65;
+nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+nextaddr=0x65;
+ nextaddr=0x65;
+wide_istore1: pc=1 bbus=pc alu=bplus1 fetch=1 nextaddr=25;				//136
+nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+ nextaddr=0x65;
+
+end
+
+macrocode bank[7:0] RAM;
+     
+operands byte{#1={+1=#1[7:0];};};
+operands varnum{#1 = {+1=#1[7:0]; }; };
+operands varnumconst{#1,#2 = {+1=#1[7:0]; +2=#2[7:0]; }; };
+operands noop{- = {};};
+operands offset{#1 = {+1=#1@[15:8];+2=#1@[7:0]; }; };
+operands disp{#1 = {+1=#1[15:8];+2=#1[7:0]; }; };
+operands index{#1 = {+1=#1[15:8];+2=#1[7:0]; }; };
+
+op bipush{+0[7:0]=0x10; operands byte;};
+op dup{+0[7:0]=0x59; operands noop;};
+op goto{+0[7:0]=0xA7; operands offset;};
+op iand{+0[7:0]=0x7E; operands noop;};
+op iadd{+0[7:0]=0x60; operands noop;};
+op ifeq{+0[7:0]=0x99; operands offset;};
+op iflt{+0[7:0]=0x9B; operands offset;};
+op if_icmpeq{+0[7:0]=0x9F; operands offset;};
+op iinc{+0[7:0]=0x9B; operands varnumconst;};
+op iload{+0[7:0]=0x15; operands varnum;};
+op invokevirtual{+0[7:0]=0x9B; operands disp;};
+op ior{+0[7:0]=0xB0; operands noop;};
+op ireturn{+0[7:0]=0xAC; operands noop;};
+op istore{+0[7:0]=0x36; operands varnum;};
+op isub{+0[7:0]=0x64; operands noop;};
+op ldc_w{+0[7:0]=0x13; operands index;};
+op nop{+0[7:0]=0x00; operands noop;};
+op pop{+0[7:0]=0x57; operands noop;};
+op swap{+0[7:0]=0x5F; operands noop;};
+op wide{+0[7:0]=0xC4; operands noop;};
+
+
+begin macrocode @0x100
+a: .symbol     0x75
+b: .symbol     0x77
+i: .symbol     0x79
+start:
+
+gcd:
+	iload		b
+	bipush	0
+	if_icmpeq	le
+	goto		lf
+lf:
+	iload		a
+	iload		b
+	isub
+	istore	i
+	istore	a
+	iload		i
+	iflt		lf
+	iload		b
+	istore	a
+	iload		i
+	istore	b
+	goto		gcd
+le:
+	iload		a
+	ireturn		
+end

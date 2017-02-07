@@ -1,0 +1,47 @@
+a:	.symbol		0x01
+
+b:	.symbol		0x02
+
+i:	.symbol		0x03
+
+gcd:
+	
+	iload		b
+	
+	bipush		0
+	
+	if_cmpeq	13
+	
+	goto		12
+12:
+	
+	iload		a
+
+	iload		b
+
+	isub
+	
+	istore		i
+
+	istore		a
+
+	iload		i
+
+	iflt		12
+
+	iload		b
+
+	istore		a
+
+	iload		i
+
+	istore		b
+
+	goto		gcd
+
+13:
+
+	iload		a
+
+	ireturn		
+	
